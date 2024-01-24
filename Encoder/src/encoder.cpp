@@ -74,8 +74,8 @@ void loop()
   // Send CAN message
   canMsg.flags.extended = 1;
   canMsg.id = 0x18FEDF00;
-  canMsg.len = 8;
-  for (uint8_t i = 0; i < 8; i++)
+  canMsg.len = 4;
+  for (uint8_t i = 0; i < 4; i++)
     canMsg.buf[i] = i + 1;
 
   can1.write(canMsg);
