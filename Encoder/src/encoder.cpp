@@ -1,9 +1,11 @@
 #include <Arduino.h>
 #include <FlexCAN_T4.h>
-#include "TimerOne.h"
+#include <TimerOne.h>
+
+constexpr int INPUT_PIN = 23;  //define encoder input pin
 
 // CAN Settings
-#define CAN_BAUD_RATE 250000 // Adjust to your CAN bus speed
+#define CAN_BAUD_RATE 250000 
 
 // Encoder Settings
 const unsigned int pulsesPerRevolution = 50;      // Replace with your encoder's pulses per revolution
@@ -47,6 +49,9 @@ void Timer_Isr()
 
   counter = 0;                      // Reset counter to zero
   Timer1.attachInterrupt(Timer_Isr); // Re-enable the timer
+
+  // Toggle built-in LED
+  digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
 }
 
 // Encoder ISR
@@ -63,23 +68,28 @@ void setup()
   can1.begin();
   can1.setBaudRate(CAN_BAUD_RATE);
 
+  pinMode(1, OUTPUT);   // CAN_TX pins
+  pinMode(0, INPUT);   // CAN_RX pins
+
   // Initialize Timer and Encoder
   Timer1.initialize(timerIntervalMicros);           // Set timer to trigger every 0.5 seconds
-  attachInterrupt(0, Do_Count1, RISING); // Attach interrupt to handle encoder pulses
+  attachInterrupt(INPUT_PIN, Do_Count1, RISING); // Attach interrupt to handle encoder pulses
   Timer1.attachInterrupt(Timer_Isr);    // Define Interrupt Service Routine (ISR)
+
+  // Initialize built-in LED pin
+  pinMode(LED_BUILTIN, OUTPUT);
 }
 
 void loop()
 {
   // Send CAN message
   canMsg.flags.extended = 1;
-  canMsg.id = 0x18FEDF00;
   canMsg.len = 4;
   for (uint8_t i = 0; i < 4; i++)
     canMsg.buf[i] = i + 1;
 
   can1.write(canMsg);
 
-  // You can add delay or other logic as needed
+ 
   delay(500);
 }
